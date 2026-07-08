@@ -1,8 +1,45 @@
 🎮 GalGame Download · AI 驱动的 Galgame 下载助手
 
-🤖 **AI 对话驱动** | 🚀 **IDM 满速直链** | 🎮 **17+ 站点聚合** | 🔑 **密码自动收集** | 📦 **智能解压整理**
+🤖 **AI 对话驱动** | 🚀 **IDM 满速直链** | 🎮 **6 站极速适配** | 🔑 **密码自动收集** | 📦 **智能解压整理**
 
 [skill 源码] • [更新日志] • [问题反馈]
+
+---
+
+## 🔥 v2.0 大更新：极速检索，速度翻倍
+
+**之前**：Claude 逐站操控浏览器——导航→找搜索框→输入→翻结果→点详情→提取链接。每个站 5-8 次工具调用，搜完得要 2-5 分钟。
+
+**现在**：给主力站写了 **OpenCLI Adapter**，把搜索逻辑从 LLM 推理循环里移出来，放到 Node.js 代码里跑。Claude 只当指挥官，不再当操作员。
+
+### 适配的站点
+
+| # | 站点 | 命令 | 速度 | CDN |
+|---|------|------|------|-----|
+| 1 | **shinnku.com** 🚀 | `opencli shinnku search "query" -f json` | ~8s | zd.shinnku.top |
+| 2 | **mihoyo.ink** 🚀 | `opencli mihoyo search "query" -f json` | ~5s | galgamedownload.date |
+| 3 | **galzy.moe** 🚀 | `opencli galzy search "query" -f json` | ~20s | line.transmission.eu.org |
+| 4 | **inarigal.com** 🚀 | `opencli inarigal search "query" -f json` | ~8s | soraflie.top |
+| 5 | **singureo.com** 🚀 | `opencli singureo search "query" -f json` | ~10s | dl.sin0.cc |
+| 6 | **galgamex.net** 🔧 | `opencli galgamex search "query" -f json` | ~5s | game.galgamex.com (S3) |
+
+### 提速效果
+
+```
+搜 4 个主力站：
+  旧方式：~8 分钟（browser driver 分步 × 4 站）
+  新方式：~25 秒（4 条 adapter 命令并行）
+  提升：~20 倍
+```
+
+### 架构变化
+
+```
+旧：Claude → Playwright MCP / opencli browser dl → 逐步操控浏览器
+新：Claude → opencli <site> search → 一次调用 → 结构化 JSON
+```
+
+每个 adapter 内部完成搜索闭环（导航→搜索→提取CDN+密码+大小），Claude 只需要收 JSON 汇总，让你选。
 
 ---
 

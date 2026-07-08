@@ -27,6 +27,34 @@
 
 Report what's available. If OpenCLI or Python is missing, stop — everything depends on them. Other missing deps → note which download modes will be unavailable.
 
+## Adapter Registration
+
+本 skill 通过 OpenCLI adapter 加速搜索。Adapter 文件在 skill 仓库的 `adapters/` 目录下，需要注册到 `~/.opencli/clis/` 才能被 OpenCLI 识别。
+
+### 注册步骤（每次会话只需执行一次）
+
+```bash
+# 检查是否已注册
+ls ~/.opencli/clis/mihoyo/search.js 2>/dev/null && echo "mihoyo adapter OK" || echo "需要注册"
+
+# 如果未注册，从 skill 目录复制
+mkdir -p ~/.opencli/clis/mihoyo
+cp <skill_dir>/adapters/mihoyo/search.js ~/.opencli/clis/mihoyo/search.js
+```
+
+### 验证
+
+```bash
+opencli mihoyo search "test" --limit 1 -f json 2>&1 | head -5
+```
+
+如果返回 JSON（不是 "Unknown command"），说明注册成功。
+
+### 注意事项
+- 注册是一次性的——adapter 文件复制到 `~/.opencli/clis/` 后，OpenCLI 会持久识别
+- 更新 skill 时，重新执行 `cp` 覆盖旧 adapter
+- 如果 `opencli mihoyo` 报 "Unknown command"，检查 `opencli doctor` 确认无报错
+
 ## Permissions
 
 Before any download work, ensure these are in `.claude/settings.local.json`:

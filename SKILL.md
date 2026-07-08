@@ -8,12 +8,24 @@ description: GalGame 下载助手 — 搜索、筛选、下载 galgame 资源。
 ## Architecture
 
 ```
-User request → OpenCLI browser → search sites → filter versions
+User request → OpenCLI adapters (优先) / browser driver (兜底) → search sites
     → IDM bridge / bdpan (download) → wait_download.py (poll)
     → extract_and_clean.py (extract + organize + clean)
 ```
 
-Config in `references/config.json`, tools in `idm_bridge.py`, phases in `references/phases/`.
+Config in `references/config.json`, tools in `idm_bridge.py`, adapters in `adapters/`, phases in `references/phases/`.
+
+### Adapter vs Browser Driver
+
+| 站点 | 方式 | 命令 | 耗时 |
+|------|------|------|------|
+| **mihoyo.ink** | 🚀 Adapter | `opencli mihoyo search "query" -f json` | ~5s |
+| **shinnku.com** | 🚀 Adapter | `opencli shinnku search "query" -f json` | ~8s |
+| **inarigal.com** | 🚀 Adapter | `opencli inarigal search "query" -f json` | ~8s |
+| **galzy.moe** | 🚀 Adapter | `opencli galzy search "query" -f json` | ~3s |
+| 其他站点 | Browser Driver | `opencli browser dl <cmd>` | ~30s/站 |
+
+Adapter 一次 Bash 返回结构化 JSON（含 CDN 直链+密码+大小），无需 Claude 分步操控浏览器。Adapter 文件在 `adapters/` 目录，Phase 0 自动注册到 `~/.opencli/clis/`。
 
 ---
 
@@ -37,12 +49,10 @@ Config in `references/config.json`, tools in `idm_bridge.py`, phases in `referen
 
 ### Search
 - **Phase 2 mandatory** — research CN/JP/EN names BEFORE Phase 3
-- **Phase 3**: Find → click → extract CDN + size + password → next. Never batch-search then backtrack
+- **Phase 3**: Adapter 站点 → 一条命令出结果；非 adapter 站点 → Find → click → extract → next
 - **Record `expected_size`** for every game — needed for Phase 5
-- **CJK input** → `references/cjk-input.md`. `execCommand('insertText')` + `String.fromCodePoint()` ONLY
-- ⛔ NEVER truncate state with head/tail — mihoyo search modal at very end of DOM
-- ⛔ NEVER `/@search?keyword=` on mihoyo.ink — use Ctrl+K modal
-- ⛔ `input.value = q` does NOT work on React (mihoyo) — use `execCommand('insertText')`
+- **mihoyo.ink**: `opencli mihoyo search "query" -f json` — CJK 由 adapter 内部处理，不会乱码
+- **CJK input for browser driver sites** → `references/cjk-input.md`. `execCommand('insertText')` + `String.fromCodePoint()` ONLY
 
 ### Download
 - **IDM path**: from config → `save_directory`, Windows backslash. `g:/` → invalid path `g:/\filename`
@@ -67,8 +77,9 @@ Config in `references/config.json`, tools in `idm_bridge.py`, phases in `referen
 - **ai2.moe**: 浏览器点击下载 → 轮询完成 → cp 到目标目录 → `references/sites/ai2moe.md`
 
 ### Site Cheatsheet
+- **mihoyo.ink**: 🚀 `opencli mihoyo search "query" -f json` — 返回 CDN+密码+大小
+- **shinnku.com**: 🚀 `opencli shinnku search "query" -f json` — 返回 CDN+大小+类别
 - **fh-xy**: click 🔍, URL params don't work
 - **qingju**: lz4 + password `qingju`
-- **mihoyo.ink**: Ctrl+K, React inputs, read `references/sites/mihoyo.md`
 - **ai2.moe**: 3-layer flow, Cloudflare → `references/sites/ai2moe.md`
 - All sites → `references/sites.md`
